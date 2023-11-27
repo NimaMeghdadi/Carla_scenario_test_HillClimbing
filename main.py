@@ -11,58 +11,35 @@ except IndexError:
     pass
 
 import carla
-
 import random
 import time
-
+import helpers 
 
 def main():
     actor_list = []
-
+    actors = helpers.Actors()
     try:
+        # Setup Carla settings
         client = carla.Client('localhost', 2000)
-        client.set_timeout(2.0)
-        traffic_manager = client.get_trafficmanager(8000)
-        world = client.get_world()
-
-        blueprint_library = world.get_blueprint_library()
-        bp = random.choice(blueprint_library.filter('vehicle'))
-
-        transform = random.choice(world.get_map().get_spawn_points())
-        print("below is transform")
-        # print(transform.location)
-        vehicle = world.spawn_actor(bp, transform)
-        time.sleep(5)
-        # print("below is vehicle")
-        print(vehicle.get_location())
-        vehicle.set_autopilot( True,traffic_manager.get_port())
-        # world.tick()
-        # SetAutopilot = carla.command.SetAutopilot
-        # SetAutopilot(vehicle, True, traffic_manager.get_port())
-        # tm_port = traffic_manager.get_port()
-        # for v in actor_list:
-        #     v.set_autopilot(True,tm_port)
-        actor_list.append(vehicle)
-        print('created %s' % vehicle.type_id)
-        time.sleep(20)
-
-
-        # camera_bp = blueprint_library.find('sensor.camera.depth')
-        # camera_transform = carla.Transform(carla.Location(x=1.5, z=2.4))
-        # camera = world.spawn_actor(camera_bp, camera_transform, attach_to=vehicle)
-
-
-      
-        # print("below is 2 location")
-        # print(vehicle.get_location())
-        # location = vehicle.get_location()
-        # location.x += 40
-        # vehicle.set_location(location)
-        # print('moved vehicle to %s' % location)
-
-      
-
-        time.sleep(5)
+        client.set_timeout(20.0)
+        # if yo want to change the map, uncomment the following line
+        world = client.get_world() # world = client.load_world('Town01')
+        world.wait_for_tick()
+        # creat the pedestrian and car
+        ped = actors.pedestrian(world)
+        car = actors.vehicle(client, world)
+        
+        # add to actor list
+        actor_list.append(ped)
+        actor_list.append(car)
+        
+        # illustrate the movement of the pedestrian and the vehicles
+        for i in range(0,100):
+                print("step: ",i)
+                print("pedestrian",ped.get_location())
+                print("car",car.get_location())
+                print ("watcher: ",world.get_spectator().get_location())
+                time.sleep(1)
 
     finally:
 
