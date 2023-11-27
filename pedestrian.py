@@ -29,10 +29,11 @@ def main():
         controller_bp = world.get_blueprint_library().find('controller.ai.walker')
         
         trans = carla.Transform()
-        trans.location.x = 10
-        trans.location.y = -50
+        # trans.location = world.get_random_location_from_navigation()
+        
+        trans.location.x = 225
+        trans.location.y = 125
         trans.location.z = 1
-        # trans.location(carla.location(x=10, y=10, z=1))
         
         walker = random.choice(ped_bp)
         actor = world.spawn_actor(walker, trans)
@@ -42,16 +43,20 @@ def main():
         world.wait_for_tick()
         
         controller.start()
-        controller.go_to_location(carla.Location(x=10, y=-110, z=1))
+        controller.go_to_location(carla.Location(x=225, y=139, z=1))
         
         actor_list.append(actor)
         
-        for i in range(0,10):
+        for i in range(0,1000):
             world.wait_for_tick()
             print("step: ",i)
-            print(actor.get_location())
-            print(controller.get_location())
+            print("pedestrian",actor.get_location())
+            # print(controller.get_location())
+            t = world.get_spectator().get_location()
+            print ("watcher: ",t)
             time.sleep(1)
+    except:
+        print('exception: may be the location of the pedestrian is not valid')
 
     finally:
 
