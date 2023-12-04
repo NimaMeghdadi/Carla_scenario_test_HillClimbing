@@ -10,6 +10,8 @@ python config.py --map Town01
 #### pedestrian
 Pedestrians and their implementation [youtube](https://www.youtube.com/watch?v=Uoz2ihDwaWA)
 
+[carlawalker] (https://carla.readthedocs.io/en/latest/python_api/#carlawalker)
+
 #### Vehicle
 Positioning on the map [youtube](https://www.youtube.com/watch?v=f9NGX2T6bmY)
 

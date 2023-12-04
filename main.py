@@ -18,7 +18,7 @@ import  actors
 
 def main():
     actor_list = []
-    car = actors.vehicle.Car()
+    vehicle = actors.vehicle.Car()
     pedestrian = actors.pedestrian.Pedestrian()
     try:
         # Setup Carla settings
@@ -34,19 +34,22 @@ def main():
         world.wait_for_tick()
         
         # creat the pedestrian and car
-        car = car.create_car(client,world,speed=300, distance=42)
-        time.sleep(4.5)
+        car = vehicle.create_car(client,world,distance=45)
         ped = pedestrian.create_pedestrian(world)
-        
         # add to actor list
         actor_list.append(car)
         actor_list.append(ped)
+        
+        vehicle.start(car)
+        time.sleep(5.3)
+        pedestrian.start(ped)
         
         # illustrate the movement of the pedestrian and the vehicles
         for i in range(0,100):
                 print("step: ",i)
                 print("pedestrian",ped.get_location())
                 print("car",car.get_location())
+                
                 # print("car speed: ",car.get_speed())
                 print ("watcher: ",world.get_spectator().get_location())
                 time.sleep(1)
