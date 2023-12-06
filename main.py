@@ -1,5 +1,4 @@
 import carla
-import random
 import time
 
 import glob
@@ -14,46 +13,60 @@ try:
 except IndexError:
     pass
 import  actors
+import sensors
 
 
 def main():
+    distance_ped_start = 8
+    distance_car_start = 45
+    speed_car=34
+    speed_ped = 0.2
+    
     actor_list = []
     vehicle = actors.vehicle.Car()
     pedestrian = actors.pedestrian.Pedestrian()
+    detect_collision = sensors.collision_detector.CollisionDetector()
     try:
         # Setup Carla settings
         client = carla.Client('localhost', 2000)
         client.set_timeout(20.0)
         world = client.get_world() 
         
-        # change map if nessary
+        # change map if needed
         if world.get_map().name != 'Carla/Maps/Town01':
             print("Town01 is loading")
             client.set_timeout(1000.0)
             world = client.load_world('Town01')
         world.wait_for_tick()
         
-        # creat the pedestrian and car
-        car = vehicle.create_car(client,world,distance=45)
+        # create the pedestrian and car
+        car = vehicle.create_car(client,world,distance=distance_car_start,speed=speed_car)
         ped = pedestrian.create_pedestrian(world)
+        
+        
         # add to actor list
         actor_list.append(car)
         actor_list.append(ped)
         
         vehicle.start(car)
-        time.sleep(5.3)
-        pedestrian.start(ped)
         
+        distances_ped_car = []
+        collision_sensor = detect_collision.detect(world,car)
+        collision = collision_sensor.listen(lambda event: distances_ped_car.append(0) )
         # illustrate the movement of the pedestrian and the vehicles
-        for i in range(0,100):
-                print("step: ",i)
-                print("pedestrian",ped.get_location())
-                print("car",car.get_location())
-                
-                # print("car speed: ",car.get_speed())
-                print ("watcher: ",world.get_spectator().get_location())
-                time.sleep(1)
-                
+        for i in range(0,10000000):
+            distance_ped_car = distance(ped.get_location().x,ped.get_location().y,car.get_location().x-2.7,car.get_location().y)
+            distances_ped_car.append(distance_ped_car)
+            print("step: ",i)
+            print(f"pedestrian: {ped.get_location()}")
+            print(f"car: {car.get_location()}")
+            print(f"distance: {distances_ped_car[-1]}")
+            print (f"watcher: {world.get_spectator().get_location()}")
+            if distances_ped_car[-1] < distance_ped_start:
+                pedestrian.start(ped,speed = speed_ped)
+                print("pedestrian is moving")
+            if i > 6 and distances_ped_car[-1] > distances_ped_car[-2]+1 : break 
+            time.sleep(0.1)
     except ValueError:
         print(ValueError)
     except KeyboardInterrupt:
@@ -71,14 +84,14 @@ def main():
         for actor in actor_list:
             actor.destroy()
         print('done.')
+        print(f'Report: distance car stop:{distances_ped_car[-2]} speed car: {speed_car} distance: {distance_ped_start} speed pedestrian: {speed_ped}')
 
-# def spector():
-#     spec = world.get_spectator()
-#     spaw = world.get_map().get_spawn_points()
-#     start = spaw[0]
-#     spe_pos = carla.Transform(start.location+carla.Location(z=50),carla.Rotation(pitch=-90))
-#     spec.set_transform(spe_pos)
-    
+
+def distance(x1,y1,x2,y2):
+    return ((x1-x2)**2+(y1-y2)**2)**0.5
+
+
+
 
 if __name__ == '__main__':
 

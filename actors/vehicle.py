@@ -12,7 +12,7 @@ class Car:
     def __init__(self):
         pass
     
-    def create_car(self,client,world,speed =1, distance = 10, ):
+    def create_car(self,client,world,speed =50, distance = 10, ):
         try:
             
             x_car = 225+distance
