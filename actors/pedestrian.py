@@ -10,7 +10,7 @@ class Pedestrian:
     def __init__(self):
         pass
     
-    def create_pedestrian(self,world):
+    def create(self,world):
         try:
             # Blueprint of the pedestrian
             ped_bp=world.get_blueprint_library().filter("walker.pedestrian.*")

@@ -12,7 +12,7 @@ class Car:
     def __init__(self):
         pass
     
-    def create_car(self,client,world,speed =50, distance = 10, ):
+    def create(self,client,world,speed =50, distance = 10, ):
         try:
             
             x_car = 225+distance
@@ -22,7 +22,7 @@ class Car:
             # Paste the blueprint ID here:
             vehicle_bp = blueprint_library.find('vehicle.lincoln.mkz_2020') 
             # Set up the vehicle transform
-            vehicle_loc = carla.Location(x= x_car, y=129, z=1)
+            vehicle_loc = carla.Location(x= x_car, y=129, z=0.5)
             vehicle_rot = carla.Rotation(pitch=0.0, yaw=180.0, roll=0.0)
             vehicle_trans = carla.Transform(vehicle_loc,vehicle_rot)
             
