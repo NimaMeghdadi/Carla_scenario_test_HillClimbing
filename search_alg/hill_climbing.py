@@ -17,9 +17,6 @@ class HillClimbing:
     
     def optimize(self,distance_ped_starts,speed_cars,speed_peds):
         nn = neural_network.mlpregressor.MlpRegressor()
-        # distance_ped_starts = np.linspace(9.0, 20.0, num=20)
-        # speed_cars = np.linspace(30.8, 80.0, num=100)
-        # speed_peds = np.linspace(0.2, 0.5, num=10)
         x_star = [random.choice(speed_cars),random.choice(distance_ped_starts),random.choice(speed_peds)]
         y_star = nn.predict(x_star)
         selected_neighbors = [y_star]
@@ -43,6 +40,8 @@ class HillClimbing:
                 break
         print("sel",selected_neighbors)
         plt.plot(selected_neighbors)
+        plt.xlabel("Iteration")
+        plt.ylabel("Distance car stops")
         plt.show()
         return x_star
 

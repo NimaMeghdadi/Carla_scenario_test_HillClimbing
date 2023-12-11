@@ -1,14 +1,10 @@
 import carla
 import time
 import csv
-import glob
-import os
-import sys
-import json
-import pandas as pd
-import json
-import numpy as np
 from csv import writer
+import numpy as np
+
+import glob,os, sys
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
         sys.version_info.major,
@@ -53,14 +49,12 @@ class Helpers:
     def start_scenario(self,client,world,vehicle,pedestrian,detect_collision,distance_ped_start,distance_car_start,speed_car,speed_ped):
         car = vehicle.create(client,world,distance=distance_car_start,speed=speed_car)
         ped = pedestrian.create(world)
-        # add to actor list
         
         vehicle.start(car)
         
         distances_ped_car = []
         collision_sensor = detect_collision.detect(world,car)
         collision_sensor.listen(lambda event:   distances_ped_car.append(0) )
-        # illustrate the movement of the pedestrian and the vehicles
         for i in range(0,1000):
             distance_ped_car = self.distance(ped.get_location().x,ped.get_location().y,car.get_location().x-2.7,car.get_location().y)
             distances_ped_car.append(distance_ped_car)
@@ -71,7 +65,6 @@ class Helpers:
             # print (f"watcher: {world.get_spectator().get_location()}")
             if distances_ped_car[-1] < distance_ped_start:
                 pedestrian.start(ped,speed = speed_ped)
-                # print("pedestrian is moving")
             if ped.get_location() == carla.Location(y=135): break
             time.sleep(0.01)
         print(distances_ped_car)
@@ -104,3 +97,13 @@ class Helpers:
         # python object to be appended
     def distance(self,x1,y1,x2,y2):
         return ((x1-x2)**2+(y1-y2)**2)**0.5
+    
+    def welcome_text(self):
+        print("Welcome to Carla scenario test")
+        print("here we have 3 parameters:if you don't want to change it, just press enter. This will run default setting which is just run Hill Climbing algorithm in pre designed dataset")
+        print("1: yes 0: no")
+        scenario_runner = int(input("run scenario runner?(this will require to open carla and takes time default = 0)") or "0")
+        train = int(input("you want to train the mlp regressor on result csv?(default = 0)") or "0")
+        run_hill_climbing = int(input("run Hill Climbing algorithm?(default = 1)") or "1")
+        
+        return scenario_runner,train,run_hill_climbing
