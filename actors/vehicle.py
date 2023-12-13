@@ -47,11 +47,11 @@ class Car:
             agent_basic.set_destination(carla.Location(x=208, y=129, z=1))
             agent_basic.follow_speed_limits(value=True)
             # speed_limit = world.player.get_speed_limit()
-            print(vehicle.get_speed_limit())
+            # print(vehicle.get_speed_limit())
             # print(vehicle.forward_speed())
             # agent_basic.set_target_speed(0.0000001)
             # agent.set_target_speed(0.0000001)
-            print("car was created")
+            # print("car was created")
             return vehicle
         except ValueError:
             print(ValueError)

@@ -36,7 +36,7 @@ class Pedestrian:
             # controller.start()
             # controller.go_to_location(carla.Location(x=225, y=139, z=1))
             # world.wait_for_tick()
-            print("pedestrian was created")
+            # print("pedestrian was created")
             return actor
         except:
             print('exception: may be the location of the pedestrian is not valid')

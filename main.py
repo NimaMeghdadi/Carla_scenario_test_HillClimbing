@@ -18,10 +18,6 @@ import helpers
 
 def main():
     # parameters
-    distance_car_start = 45
-    distance_ped_starts = np.linspace(9.0, 20.0, num=100)
-    speed_cars = np.linspace(30.8, 80.0, num=100)
-    speed_peds = np.linspace(0.2, 0.5, num=50)
     actor_list = []
     
     hill_climbing = search_alg.hill_climbing.HillClimbing()
@@ -30,6 +26,8 @@ def main():
     detect_collision = sensors.collision_detector.CollisionDetector()
     mlp = neural_network.mlpregressor.MlpRegressor()
     hp = helpers.Helpers()
+    
+    distance_car_start,distance_ped_starts,speed_cars,speed_peds = hp.params()
     try:
         scenario_runner,train,run_hill_climbing = hp.welcome_text()
 
@@ -37,11 +35,13 @@ def main():
             client,world = hp.set_up_carla()
             hp.scenario_runner(client,world,vehicle,pedestrian,detect_collision,distance_ped_starts,distance_car_start,speed_cars,speed_peds)
         if train == 1:
-            model = mlp.train()
-            model = mlp.load_model()
+            model = mlp.train(y_name="collision_time")
+            model = mlp.load_model(name="collision_time_model.pickle")
         if run_hill_climbing == 1:
-            opt = hill_climbing.optimize(distance_ped_starts,speed_cars,speed_peds)
+            distance_car_start,distance_ped_starts,speed_cars,speed_peds = hp.params(step_distance_ped_starts=100,step_speed_cars=100,step_speed_peds=100)
+            opt = hill_climbing.optimize(distance_ped_starts,speed_cars,speed_peds,model_name='collision_time_model.pickle')
             print(opt,mlp.predict(opt))
+            
         
     except ValueError:
         print(ValueError)
@@ -55,5 +55,7 @@ def main():
         print('done.')
         
 if __name__ == '__main__':
+
+
 
     main()

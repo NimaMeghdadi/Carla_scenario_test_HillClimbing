@@ -5,26 +5,20 @@ import matplotlib.pyplot as plt
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-
 from sklearn.neural_network import MLPRegressor
-
 from sklearn import metrics
-
 from sklearn.model_selection import GridSearchCV
-
 import pickle
 
+import constant
 class MlpRegressor:
     def __init__(self):
         pass
-    def train(self, dir_csv_data='./result.csv',iterations=300,hidden_layer_size=(150,100,50)):
-        df = pd.read_csv(dir_csv_data)
-        # df = df.drop(["collision",'speed_car','distance_ped_start','speed_ped'], axis=1)
-        # print(df)
-
-        x = df.drop('collision', axis=1)
-        y = df['collision']
-
+    def train(self, name_csv= "result.csv",iterations=300,hidden_layer_size=(150,100,50),y_name="collision_distance",param_no=3):
+        df = pd.read_csv(constant.DATA_DIR + name_csv)
+        y_no = df.shape[1] - param_no
+        x = df.drop(columns=df.columns[0:y_no], axis=1)
+        y = df[y_name]
         trainX, testX, trainY, testY = train_test_split(x, y, test_size = 0.2)
 
         sc=StandardScaler()
@@ -38,25 +32,31 @@ class MlpRegressor:
                        solver = 'adam')
 
         mlp_reg.fit(trainX_scaled, trainY)
-        
-        self.save_model(mlp_reg)
+
+        self.save_model(mlp_reg,name=y_name)
 
         return mlp_reg
 
-    def save_model(self,model,dir=""):
-        filename = dir + "model.pickle"
+    def save_model(self,model,name =""):
+        print("saving model")
+        filename = constant.MODEL_DIR + "{}_model.pickle".format(name)
         pickle.dump(model, open(filename, "wb"))
+
+    def load_model(self,name="collision_distance_model.pickle"):
+        print("loading model")
         
-    def load_model(self,dir=""):
-        filename = dir + "model.pickle"
+        filename = constant.MODEL_DIR + name
         loaded_model = pickle.load(open(filename, "rb"))
         return loaded_model
-    
-    def predict(self,data,model="",dir_csv_data='./result.csv'):
-        if model == "":
+
+    def predict(self,data,name_model="",name_csv='result.csv',param_no=3):
+        if name_model == "":
             model = self.load_model()
-        df = pd.read_csv(dir_csv_data)
-        trainX = df.drop('collision', axis=1)
+        else:
+            model = self.load_model(name=name_model)
+        df = pd.read_csv(constant.DATA_DIR + name_csv)
+        y_no = df.shape[1] - param_no 
+        trainX =  df.drop(columns=df.columns[0:y_no], axis=1)
         sc = StandardScaler()
         scaler = sc.fit(trainX)
         norm_data = scaler.transform([data])
