@@ -41,8 +41,6 @@ def main():
             distance_car_start,distance_ped_starts,speed_cars,speed_peds = hp.params(step_distance_ped_starts=100,step_speed_cars=100,step_speed_peds=100)
             opt = hill_climbing.optimize(distance_ped_starts,speed_cars,speed_peds,model_name='collision_time_model.pickle')
             print(opt,mlp.predict(opt))
-            
-        
     except ValueError:
         print(ValueError)
     except KeyboardInterrupt:
