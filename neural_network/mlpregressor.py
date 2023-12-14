@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
-
 import matplotlib.pyplot as plt
-
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPRegressor
@@ -15,26 +13,23 @@ class MlpRegressor:
     def __init__(self):
         pass
     def train(self, name_csv= "result.csv",iterations=300,hidden_layer_size=(150,100,50),y_name="collision_distance",param_no=3):
+        # Read data from csv
         df = pd.read_csv(constant.DATA_DIR + name_csv)
         y_no = df.shape[1] - param_no
         x = df.drop(columns=df.columns[0:y_no], axis=1)
         y = df[y_name]
         trainX, testX, trainY, testY = train_test_split(x, y, test_size = 0.2)
-
+        # Scale data
         sc=StandardScaler()
-
         scaler = sc.fit(trainX)
         trainX_scaled = scaler.transform(trainX)
         testX_scaled = scaler.transform(testX)
-
+        # Train model
         mlp_reg = MLPRegressor(hidden_layer_sizes=hidden_layer_size,
                        max_iter = iterations,activation = 'relu',
                        solver = 'adam')
-
         mlp_reg.fit(trainX_scaled, trainY)
-
         self.save_model(mlp_reg,name=y_name)
-
         return mlp_reg
 
     def save_model(self,model,name =""):
@@ -50,16 +45,20 @@ class MlpRegressor:
         return loaded_model
 
     def predict(self,data,name_model="",name_csv='result.csv',param_no=3):
+        # Load model
         if name_model == "":
             model = self.load_model()
         else:
             model = self.load_model(name=name_model)
+        # Read data from csv
         df = pd.read_csv(constant.DATA_DIR + name_csv)
         y_no = df.shape[1] - param_no 
         trainX =  df.drop(columns=df.columns[0:y_no], axis=1)
+        # Scale data
         sc = StandardScaler()
         scaler = sc.fit(trainX)
         norm_data = scaler.transform([data])
+        # Predict
         pred = model.predict(norm_data)
         if pred < 0:
             pred = 0
