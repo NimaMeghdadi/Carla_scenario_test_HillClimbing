@@ -3,7 +3,6 @@ import time
 import csv
 from csv import writer
 import numpy as np
-
 import glob,os, sys
 try:
     sys.path.append(glob.glob('../carla/dist/carla-*%d.%d-%s.egg' % (
@@ -19,6 +18,7 @@ class Helpers:
     def __init__(self):
         pass
     def set_up_carla(self):
+        # Set up carla
         client = carla.Client('localhost', 2000)
         client.set_timeout(20.0)
         world = client.get_world()
@@ -26,6 +26,7 @@ class Helpers:
         return client,world
         
     def change_map(self,world,client):
+        # Change map
         if world.get_map().name != 'Carla/Maps/Town01':
             print("Town01 is loading")
             client.set_timeout(1000.0)
@@ -33,7 +34,8 @@ class Helpers:
         world.wait_for_tick()
 
     def scenario_runner(self,client,world,vehicle,pedestrian,detect_collision,distance_ped_starts,distance_car_start,speed_cars,speed_peds):
-        self.write_csv(reset=True)
+        # Run scenario
+        self.write_csv(reset=True,name = 'result1.csv')
         for speed_ped in speed_peds:
                 for distance_ped_start in distance_ped_starts:
                     for speed_car in speed_cars:
@@ -46,20 +48,27 @@ class Helpers:
                                                 distance_car_start,
                                                 speed_car,
                                                 speed_ped)
-                        self.write_csv(collision_distance,collision_time,speed_car,distance_ped_start,speed_ped)
+                        # Save data
+                        self.write_csv(collision_distance,
+                                       collision_time,
+                                       speed_car,
+                                       distance_ped_start,
+                                       speed_ped,
+                                       name = 'result1.csv')
 
     def start_scenario(self,client,world,vehicle,pedestrian,detect_collision,distance_ped_start,distance_car_start,speed_car,speed_ped):
         try:
+            # Create actors
             car = vehicle.create(client,world,distance=distance_car_start,speed=speed_car)
             ped = pedestrian.create(world)
-            
             vehicle.start(car)
-            
+            # Create list to store final data
             distances_ped_car = []
             TTC = []
+            # Create collision sensor
             collision_sensor = detect_collision.detect(world,car)
             collision_sensor.listen(lambda event:   distances_ped_car.append(0) )
-            # collision_sensor.listen(lambda event:   TTC.append(0) )
+            # Start Scenario
             for i in range(0,1000):
                 distance_ped_car = self.distance(ped.get_location().x,ped.get_location().y,car.get_location().x-2.7,car.get_location().y)
                 distances_ped_car.append(distance_ped_car)
@@ -74,6 +83,7 @@ class Helpers:
                     pedestrian.start(ped,speed = speed_ped)
                 if ped.get_location() == carla.Location(y=135): break
                 time.sleep(0.01)
+            # Save data
             print(f'Report: distance car stop: {min(distances_ped_car)} speed car: {speed_car} distance: {distance_ped_start} speed pedestrian: {speed_ped}')
             world.wait_for_tick()
             if min(distances_ped_car) == 0:
@@ -84,23 +94,20 @@ class Helpers:
         return min(distances_ped_car), min (TTC)
 
     def destroy_actors(self,client):
-        print('destroying actors')
+        # Destroy actors
         client.apply_batch([carla.command.DestroyActor(x) for x in client.get_world().get_actors() if 'vehicle' in x.type_id])
         client.apply_batch([carla.command.DestroyActor(x) for x in client.get_world().get_actors() if 'walker' in x.type_id])
         client.apply_batch([carla.command.DestroyActor(x) for x in client.get_world().get_actors() if 'sensor' in x.type_id])
 
-
-
-
-    def write_csv(self,collision_distance=-1,collision_time=-1,speed_car=-1,start_distance=-1,speed_ped = -1,reset=False):
+    def write_csv(self,collision_distance=-1,collision_time=-1,speed_car=-1,start_distance=-1,speed_ped = -1,reset=False,name = 'result.csv'):
         if reset:
-            with open(constant.DATA_DIR +'result.csv', 'w', newline='') as csvfile:
+            with open(constant.DATA_DIR +name, 'w', newline='') as csvfile:
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
                 spamwriter.writerow(['collision_distance'] +["collision_time"]+["speed_car"] + ['distance_ped_start']+['speed_ped'])
         else:
             List=[collision_distance,collision_time,speed_car,start_distance,speed_ped]
-            with open(constant.DATA_DIR+'result.csv', 'a', newline='') as csvfile:
+            with open(constant.DATA_DIR+name, 'a', newline='') as csvfile:
                 writer_object = writer(csvfile)
                 writer_object.writerow(List)
     
@@ -122,11 +129,13 @@ class Helpers:
         print("1: yes 0: no")
         scenario_runner = int(input("run scenario runner?(this will require to open carla and takes time default = 0): ") or "0")
         train = int(input("you want to train the mlp regressor on result csv?(default = 0): ") or "0")
-        run_hill_climbing = int(input("run Hill Climbing algorithm?(default = 1): ") or "1")
+        run_search = int(input("run Search algorithms?(default = 1): ") or "1")
         
-        return scenario_runner,train,run_hill_climbing
+        return scenario_runner,train,run_search
     
-    def params(self,s_distance_ped_starts = 5,e_distance_ped_starts=20,step_distance_ped_starts=10,s_speed_cars=30,e_speed_cars=80,step_speed_cars=10,s_speed_peds=0.2,e_speed_peds=0.5,step_speed_peds=3):
+    def params(self,s_distance_ped_starts = 5,e_distance_ped_starts=25,step_distance_ped_starts=10,
+               s_speed_cars=5,e_speed_cars=80,step_speed_cars=10,
+               s_speed_peds=0.1,e_speed_peds=0.5,step_speed_peds=3):
         
         distance_car_start = 45
         distance_ped_starts = np.linspace(s_distance_ped_starts, e_distance_ped_starts, num= step_distance_ped_starts)

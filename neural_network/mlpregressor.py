@@ -12,7 +12,8 @@ import constant
 class MlpRegressor:
     def __init__(self):
         pass
-    def train(self, name_csv= "result.csv",iterations=300,hidden_layer_size=(150,100,50),y_name="collision_distance",param_no=3):
+    def train(self, name_csv= "result.csv",iterations=300,hidden_layer_size=(150,100,50),
+              y_name="collision_distance",param_no=3,save_name="collision_distance"):
         # Read data from csv
         df = pd.read_csv(constant.DATA_DIR + name_csv)
         y_no = df.shape[1] - param_no
@@ -29,7 +30,7 @@ class MlpRegressor:
                        max_iter = iterations,activation = 'relu',
                        solver = 'adam')
         mlp_reg.fit(trainX_scaled, trainY)
-        self.save_model(mlp_reg,name=y_name)
+        self.save_model(mlp_reg,name=save_name)
         return mlp_reg
 
     def save_model(self,model,name =""):
@@ -57,6 +58,7 @@ class MlpRegressor:
         # Scale data
         sc = StandardScaler()
         scaler = sc.fit(trainX)
+        data = np.array(data)
         norm_data = scaler.transform([data])
         # Predict
         pred = model.predict(norm_data)
