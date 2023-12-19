@@ -35,11 +35,13 @@ class Helpers:
 
     def scenario_runner(self,client,world,vehicle,pedestrian,detect_collision,distance_ped_starts,distance_car_start,speed_cars,speed_peds):
         # Run scenario
-        self.write_csv(reset=True,name = 'result1.csv')
+        name_csv = 'result3.csv'
+        self.write_csv(reset=True,name = name_csv)
         for speed_ped in speed_peds:
                 for distance_ped_start in distance_ped_starts:
                     for speed_car in speed_cars:
-                        collision_distance, collision_time = self.start_scenario(client,
+                        for weather in [0,1]:
+                            collision_distance, collision_time = self.start_scenario(client,
                                                 world,
                                                 vehicle,
                                                 pedestrian,
@@ -47,20 +49,24 @@ class Helpers:
                                                 distance_ped_start,
                                                 distance_car_start,
                                                 speed_car,
-                                                speed_ped)
-                        # Save data
-                        self.write_csv(collision_distance,
-                                       collision_time,
-                                       speed_car,
-                                       distance_ped_start,
-                                       speed_ped,
-                                       name = 'result1.csv')
+                                                speed_ped,
+                                                weather = weather)
+                            # Save data
+                            self.write_csv(collision_distance,
+                                        collision_time,
+                                        speed_car,
+                                        distance_ped_start,
+                                        speed_ped,
+                                        weather = weather,
+                                        name = name_csv)
 
-    def start_scenario(self,client,world,vehicle,pedestrian,detect_collision,distance_ped_start,distance_car_start,speed_car,speed_ped):
+    def start_scenario(self,client,world,vehicle,pedestrian,detect_collision,distance_ped_start,
+                       distance_car_start,speed_car,speed_ped,weather):
         try:
             # Create actors
             car = vehicle.create(client,world,distance=distance_car_start,speed=speed_car)
             ped = pedestrian.create(world)
+            self.change_weather(world,mode=weather)
             vehicle.start(car)
             # Create list to store final data
             distances_ped_car = []
@@ -99,14 +105,14 @@ class Helpers:
         client.apply_batch([carla.command.DestroyActor(x) for x in client.get_world().get_actors() if 'walker' in x.type_id])
         client.apply_batch([carla.command.DestroyActor(x) for x in client.get_world().get_actors() if 'sensor' in x.type_id])
 
-    def write_csv(self,collision_distance=-1,collision_time=-1,speed_car=-1,start_distance=-1,speed_ped = -1,reset=False,name = 'result.csv'):
+    def write_csv(self,collision_distance=-1,collision_time=-1,speed_car=-1,start_distance=-1,speed_ped = -1,weather=-1,reset=False,name = 'result.csv'):
         if reset:
             with open(constant.DATA_DIR +name, 'w', newline='') as csvfile:
                 spamwriter = csv.writer(csvfile, delimiter=',',
                                         quotechar=',', quoting=csv.QUOTE_MINIMAL)
-                spamwriter.writerow(['collision_distance'] +["collision_time"]+["speed_car"] + ['distance_ped_start']+['speed_ped'])
+                spamwriter.writerow(['collision_distance'] +["collision_time"]+["speed_car"] + ['distance_ped_start']+['speed_ped']+['weather'])
         else:
-            List=[collision_distance,collision_time,speed_car,start_distance,speed_ped]
+            List=[collision_distance,collision_time,speed_car,start_distance,speed_ped,weather]
             with open(constant.DATA_DIR+name, 'a', newline='') as csvfile:
                 writer_object = writer(csvfile)
                 writer_object.writerow(List)
@@ -134,7 +140,7 @@ class Helpers:
         return scenario_runner,train,run_search
     
     def params(self,s_distance_ped_starts = 5,e_distance_ped_starts=25,step_distance_ped_starts=10,
-               s_speed_cars=5,e_speed_cars=80,step_speed_cars=10,
+               s_speed_cars=15,e_speed_cars=80,step_speed_cars=10,
                s_speed_peds=0.1,e_speed_peds=0.5,step_speed_peds=3):
         
         distance_car_start = 45
@@ -143,3 +149,18 @@ class Helpers:
         speed_peds = np.linspace(s_speed_peds, e_speed_peds, num=step_speed_peds)
         
         return distance_car_start,distance_ped_starts,speed_cars,speed_peds
+    
+    def change_weather(self,world,mode = 0):
+        weather = world.get_weather()
+        if mode == 0:# bad condition
+            sun,fog_dens,fog_dist,rain,wet = -30,100,0,50,100
+        elif mode == 1:# good condition
+            sun,fog_dens,fog_dist,rain,wet = 90,0,100,0,0
+        
+        weather.sun_altitude_angle = sun # -90 to 90
+        weather.fog_density = fog_dens
+        weather.fog_distance = fog_dist # 0 to infinte
+        weather.precipitation = rain # rain 0 to 100
+        weather.wetness  = wet # rain 0 to 100
+        world.set_weather(weather)
+        world.wait_for_tick()
